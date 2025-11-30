@@ -40,7 +40,9 @@ import {
   WifiOff,
   Signal,
   Share2,
-  LogOut
+  LogOut,
+  X,
+  Settings
 } from 'lucide-react';
 
 export const Icons = {
@@ -84,5 +86,8 @@ export const Icons = {
   WifiOff,
   Signal,
   Share2,
-  LogOut
+  LogOut,
+  X,
+  Settings
 };
+

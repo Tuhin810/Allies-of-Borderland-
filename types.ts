@@ -33,16 +33,20 @@ export interface Player {
   actualSuit?: Suit; // The truth (Hidden from self)
   guessedSuit?: Suit | null; // The bet
   betAmount: number; // Staked SOL
+  rcStake?: number; // Staked RC tokens
   balance: number; // In-game chips or SOL balance
   solanaAddress?: string; // Solana Public Key string
   reputation: number; // Trust score
 }
 
 export interface GameState {
+  gameId?: string; // Unique ID for the current game instance
   phase: GamePhase;
   round: number;
   timer: number;
-  pot: number;
+  discussionTime: number; // Configured time for discussion phase
+  pot: number; // SOL pot
+  rcPot?: number; // RC tokens pot
   narrative: string;
   history: string[];
 }

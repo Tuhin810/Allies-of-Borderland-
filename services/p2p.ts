@@ -60,7 +60,7 @@ export class P2PService {
       });
 
       this.peer.on('connection', (conn) => this.handleConnection(conn));
-      this.peer.on('call', (call) => this.handleCall(call));
+      this.peer.on('call', (call) => this.handleIncomingCall(call));
       
       this.peer.on('error', (err) => {
         console.error('Peer Error:', err);
@@ -117,22 +117,32 @@ export class P2PService {
   }
 
   // Handle incoming media call
-  private handleCall(call: MediaConnection) {
+  private handleIncomingCall(call: MediaConnection) {
     console.log('Incoming call from:', call.peer);
     
+    // Setup listeners FIRST to ensure we don't miss any events
+    this.setupCallListeners(call);
+
     // If we have a local stream, answer with it.
     // If we are a spectator (localStream is null), answer with a dummy stream.
-    // PeerJS call.answer() accepts a stream.
     const streamToAnswer = this.localStream || this.createDummyStream();
     
     call.answer(streamToAnswer);
+  }
 
+  // Setup listeners for a media connection (both incoming and outgoing)
+  private setupCallListeners(call: MediaConnection) {
     call.on('stream', (remoteStream) => {
       console.log('Received stream from:', call.peer);
       this.emit('stream', { peerId: call.peer, stream: remoteStream });
     });
     
     call.on('error', (err) => console.error("Call Error", err));
+
+    call.on('close', () => {
+      console.log('Media connection closed:', call.peer);
+      this.mediaConnections.delete(call.peer);
+    });
 
     this.mediaConnections.set(call.peer, call);
   }
@@ -154,7 +164,7 @@ export class P2PService {
 
     console.log(`Calling peer: ${peerId}`);
     const call = this.peer.call(peerId, streamToCall);
-    this.handleCall(call);
+    this.setupCallListeners(call);
   }
 
   // Check if we already have a media connection with this peer

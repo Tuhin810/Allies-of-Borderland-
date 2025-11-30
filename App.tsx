@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-import { TokenProvider } from './contexts/TokenContext';
+import { TokenProvider, useTokens } from './contexts/TokenContext';
 import Navbar from './components/Navbar';
 import { GameState, Player, GamePhase, Suit, PlayerAction, ChatMessage, Role } from './types';
 import { generateRoundNarrative, generateGameIntro } from './services/geminiService';
 import { p2pService } from './services/p2p';
-import { registerArena, setArenaStatus, updateArena } from './services/arenaRegistry';
+import { registerArena, setArenaStatus, updateArena, getArena } from './services/arenaRegistry';
 import LandingPage from './pages/LandingPage';
 import ArenaPage from './pages/ArenaPage';
 import LobbyPage from './pages/LobbyPage';
@@ -17,6 +17,9 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import FAQPage from './pages/FAQPage';
 import { useAuth } from './contexts/AuthContext';
 import ProfilePage from './pages/ProfilePage';
+import StakingModal from './components/StakingModal';
+import { distributeRCWinnings, calculateRCPot } from './services/stakingService';
+import { ECONOMY } from './constants/economy';
 
 // Constants
 const INITIAL_HP = 100;
@@ -42,9 +45,10 @@ const AI_PLAYERS: Player[] = [
 const createInitialGameState = (): GameState => ({
   phase: GamePhase.LOBBY,
   round: 0,
-  timer: DISCUSSION_TIME,
+  timer: 0,
+  discussionTime: DISCUSSION_TIME, // Default
   pot: 0,
-  narrative: 'Waiting for game to start...',
+  narrative: "Waiting for players...",
   history: []
 });
 
@@ -63,6 +67,11 @@ const AppContent = () => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(new Map());
   const { profile: userProfile, solanaProfile, loginWithWallet, loginWithGoogle, needsProfileSetup } = useAuth();
+  const { tokenBalance, spendTokens, addTokens } = useTokens();
+
+  // Staking state
+  const [showStakingModal, setShowStakingModal] = useState(false);
+  const [pendingGameStart, setPendingGameStart] = useState<'single' | 'multi' | null>(null);
 
   // Game State
   const [players, setPlayers] = useState<Player[]>([]);
@@ -329,7 +338,14 @@ const AppContent = () => {
     p2pService.on('BUY_IN', handleBuyIn);
 
     return () => {
-      p2pService.cleanup();
+      p2pService.off('JOIN', handleJoin);
+      p2pService.off('STATE_UPDATE', handleStateUpdate);
+      p2pService.off('WELCOME', handleWelcome);
+      p2pService.off('PLAYER_ACTION', handlePlayerAction);
+      p2pService.off('stream', handleStream);
+      p2pService.off('CHAT', handleChat);
+      p2pService.off('playerDisconnected', handlePlayerDisconnect);
+      p2pService.off('BUY_IN', handleBuyIn);
     };
   }, [gameState.pot]);
 
@@ -411,6 +427,38 @@ const AppContent = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [roomId]);
 
+  // Auto-deduct stake on game start (Clients)
+  const hasPaidRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const handleGameStart = async () => {
+      // Reset payment tracking when in lobby
+      if (gameState.phase === GamePhase.LOBBY) {
+        hasPaidRef.current = null;
+        return;
+      }
+
+      // If game started and we haven't paid yet for THIS game
+      const currentGameId = gameState.gameId;
+      if (gameState.phase === GamePhase.DISCUSSION && roomId && currentGameId && hasPaidRef.current !== currentGameId && !p2pService.isHost) {
+        hasPaidRef.current = currentGameId;
+
+        const arena = await getArena(roomId);
+        const stakeAmount = arena?.buyIn || 0;
+
+        if (stakeAmount > 0) {
+          const success = await spendTokens(stakeAmount);
+          if (!success) {
+            console.error('Failed to pay entry fee!');
+            // Ideally kick player or show error
+          }
+        }
+      }
+    };
+
+    handleGameStart();
+  }, [gameState.phase, roomId, gameState.gameId]);
+
   // --- Actions ---
 
   const handleConnectWallet = async () => {
@@ -448,7 +496,7 @@ const AppContent = () => {
     };
   };
 
-  const createRoom = async () => {
+  const createRoom = async (config: { stakeAmount: number, discussionTime: number, maxPlayers: number }) => {
     let stream: MediaStream;
     try {
       stream = await ensureLocalStream();
@@ -458,10 +506,23 @@ const AppContent = () => {
     }
     navigate('/loading');
     setIsMultiplayer(true);
+
+    // Deduct Room Creation Cost (Platform Fee)
+    const creationSuccess = await spendTokens(ECONOMY.ROOM_CREATION_COST);
+    if (!creationSuccess) {
+      alert(`Insufficient funds to create room. Cost: ${ECONOMY.ROOM_CREATION_COST} RC`);
+      navigate('/arena');
+      return;
+    }
+
     const id = await p2pService.init(true, stream);
     setRoomId(id);
 
-    const host = { ...initLocalPlayer(), isHost: true, peerId: id };
+    // Host pays creation cost immediately? 
+    // Or just sets the stake. Let's assume creation cost is separate from stake.
+    // For now, we just set the stake.
+
+    const host = { ...initLocalPlayer(), isHost: true, peerId: id, rcStake: config.stakeAmount };
     setPlayers([host]);
     setGameState(prev => ({ ...prev, narrative: "Waiting for citizens..." }));
     registerArena({
@@ -470,8 +531,9 @@ const AppContent = () => {
       hostName: host.name,
       status: 'waiting',
       playerCount: 1,
-      capacity: 10,
-      buyIn: BUY_IN_AMOUNT
+      capacity: config.maxPlayers,
+      buyIn: config.stakeAmount, // Set the buy-in/stake amount
+      discussionTime: config.discussionTime
     }).catch((err) => console.warn('Failed to register arena', err));
     navigate('/lobby');
   };
@@ -479,6 +541,18 @@ const AppContent = () => {
   const joinRoom = async (asSpectator: boolean = false, targetRoomId?: string) => {
     const roomToJoin = targetRoomId || inputRoomId;
     if (!roomToJoin) return;
+
+    // Validate Balance for Players
+    if (!asSpectator) {
+      const arena = await getArena(roomToJoin);
+      if (arena && arena.buyIn > 0) {
+        if (tokenBalance < arena.buyIn) {
+          alert(`Insufficient funds! This room requires ${arena.buyIn} RC to join. You have ${tokenBalance} RC.`);
+          return;
+        }
+      }
+    }
+
     let stream: MediaStream | null = null;
     if (!asSpectator) {
       try {
@@ -500,52 +574,111 @@ const AppContent = () => {
   };
 
   const startSinglePlayer = () => {
-    setIsMultiplayer(false);
-    const me = initLocalPlayer();
-    const bots = AI_PLAYERS.map(b => ({ ...b, role: Role.CITIZEN, actualSuit: Suit.HEARTS }));
-    const all = [me, ...bots];
-    setPlayers(all);
-    startNewGame(all);
-    navigate('/game');
+    // Show staking modal before starting
+    setPendingGameStart('single');
+    setShowStakingModal(true);
   };
 
   const startMultiplayerGame = async () => {
     if (!p2pService.isHost) return;
-    startNewGame(players);
+
+    // Fetch arena to get buy-in amount and config
+    const arena = await getArena(roomId);
+    const stakeAmount = arena?.buyIn || 0;
+    const discussionTime = arena?.discussionTime || DISCUSSION_TIME;
+
+    // Deduct host's tokens
+    if (stakeAmount > 0) {
+      const success = await spendTokens(stakeAmount);
+      if (!success) {
+        alert('Failed to pay entry fee. Game cannot start.');
+        return;
+      }
+    }
+
+    // Update ALL players with the stake amount (since it's fixed for the room)
+    const updatedPlayers = players.map(p => ({
+      ...p,
+      rcStake: stakeAmount
+    }));
+    setPlayers(updatedPlayers);
+
+    // Start game with updated players and config
+    setGameState(prev => ({ ...prev, discussionTime }));
+    startNewGame(updatedPlayers, { discussionTime });
+
     if (roomId) {
       setArenaStatus(roomId, 'active').catch((err) => console.warn('Failed to mark arena active', err));
     }
     navigate('/game');
   };
 
-  const startNewGame = async (currentPlayers: Player[]) => {
+  const handleStakeConfirm = async (stakeAmount: number) => {
+    // Deduct tokens from player's balance
+    const success = await spendTokens(stakeAmount);
+    if (!success) {
+      alert('Failed to stake tokens. Please try again.');
+      return;
+    }
+
+    // Update local player with stake
+    if (pendingGameStart === 'single') {
+      // Single player mode
+      setIsMultiplayer(false);
+      const me = { ...initLocalPlayer(), rcStake: stakeAmount };
+      const bots = AI_PLAYERS.map(b => ({
+        ...b,
+        role: Role.CITIZEN,
+        actualSuit: Suit.HEARTS,
+        rcStake: Math.floor(Math.random() * 30) + 20 // Bots stake 20-50 RC
+      }));
+      const all = [me, ...bots];
+      setPlayers(all);
+      startNewGame(all);
+      navigate('/game');
+    }
+
+    setPendingGameStart(null);
+  };
+
+  const startNewGame = async (initializedPlayers: Player[], config?: { discussionTime?: number }) => {
+    // Assign roles
+    const playerCount = initializedPlayers.length;
+    const jackIndex = Math.floor(Math.random() * playerCount);
     const suits = [Suit.HEARTS, Suit.DIAMONDS, Suit.CLUBS, Suit.SPADES];
 
-    const jackIndex = Math.floor(Math.random() * currentPlayers.length);
-
-    const initializedPlayers = currentPlayers.map((p, idx) => ({
+    const playersWithRoles = initializedPlayers.map((p, i) => ({
       ...p,
-      role: idx === jackIndex ? Role.JACK : Role.CITIZEN,
-      actualSuit: suits[Math.floor(Math.random() * suits.length)],
-      guessedSuit: null,
+      role: i === jackIndex ? Role.JACK : Role.CITIZEN,
+      actualSuit: i === jackIndex ? Suit.SPADES : suits[Math.floor(Math.random() * suits.length)], // Jack is Spades (for now)
+      hp: INITIAL_HP,
       isAlive: true,
-      hp: INITIAL_HP
+      guessedSuit: null
     }));
+
+    // Calculate RC pot from all players' stakes
+    const rcPot = calculateRCPot(initializedPlayers);
+
+    const discussionTime = config?.discussionTime || gameState.discussionTime || DISCUSSION_TIME;
 
     const intro = await generateGameIntro();
     const newState = {
       ...gameState,
+      gameId: Date.now().toString(), // Generate unique game ID
       phase: GamePhase.DISCUSSION,
       round: 1,
+      rcPot: rcPot, // Add RC pot to game state
+      timer: discussionTime,
+      discussionTime: discussionTime,
+      pot: playerCount * BUY_IN_AMOUNT,
       narrative: intro,
-      timer: DISCUSSION_TIME,
-      history: [intro, "The Jack has been chosen. Trust no one."]
+      history: [intro]
     };
 
-    setPlayers(initializedPlayers);
+    setPlayers(playersWithRoles);
     setGameState(newState);
     if (p2pService.isHost) p2pService.broadcast('STATE_UPDATE', newState);
-    if (p2pService.isHost) p2pService.broadcast('WELCOME', { players: initializedPlayers, gameState: newState });
+    if (p2pService.isHost) p2pService.broadcast('WELCOME', { players: playersWithRoles, gameState: newState });
   };
 
   const handleAction = async (type: 'GUESS_SUIT' | 'BRIBE', value: any) => {
@@ -636,13 +769,36 @@ const AppContent = () => {
       narrative = await generateRoundNarrative(gameState.round, Suit.HEARTS, eliminatedCount, survivors.length);
     }
 
+    // Handle RC winnings if game is over
+    if (gameOver && gameState.rcPot && gameState.rcPot > 0) {
+      const winnings = distributeRCWinnings(survivors, gameState.rcPot);
+      const localPlayerObj = resolvedPlayers.find(p => p.isLocal);
+
+      if (localPlayerObj) {
+        const myWinnings = winnings.get(localPlayerObj.id);
+
+        if (myWinnings && myWinnings > 0) {
+          // Winner - add winnings
+          await addTokens(myWinnings);
+          narrative += `\n\n🎉 You won ${Math.floor(myWinnings)} RC tokens!`;
+        } else {
+          // Loser - already spent
+          const lostAmount = localPlayerObj.rcStake || 0;
+          narrative += `\n\n💀 You lost ${lostAmount} RC tokens.`;
+        }
+      }
+    }
+
     const finalState = {
       phase: gameOver ? GamePhase.GAME_OVER : GamePhase.DISCUSSION,
       round: gameOver ? gameState.round : gameState.round + 1,
-      timer: gameOver ? 0 : DISCUSSION_TIME,
+      timer: gameOver ? 0 : gameState.discussionTime,
       pot: gameState.pot,
+      rcPot: gameState.rcPot, // Keep rcPot in state
       narrative,
-      history: [narrative, ...gameState.history]
+      history: [narrative, ...gameState.history],
+      discussionTime: gameState.discussionTime, // Preserve config
+      gameId: gameState.gameId // Preserve gameId
     };
 
     setPlayers(resolvedPlayers);
@@ -747,6 +903,18 @@ const AppContent = () => {
           }
         />
       </Routes>
+
+      {/* Staking Modal */}
+      <StakingModal
+        isOpen={showStakingModal}
+        onClose={() => {
+          setShowStakingModal(false);
+          setPendingGameStart(null);
+        }}
+        onConfirm={handleStakeConfirm}
+        title="Stake Your RC Tokens"
+        description="Choose how much to risk in this game"
+      />
     </>
   );
 };

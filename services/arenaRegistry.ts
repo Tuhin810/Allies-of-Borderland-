@@ -1,4 +1,4 @@
-import { collection, doc, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where, getDoc } from 'firebase/firestore';
 import { db, firebaseEnabled } from './firebase';
 
 export type ArenaStatus = 'waiting' | 'active' | 'ended';
@@ -11,6 +11,7 @@ export interface ArenaRecord {
   playerCount: number;
   capacity: number;
   buyIn: number;
+  discussionTime?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -47,6 +48,15 @@ export const updateArena = async (roomId: string, data: Partial<Omit<ArenaRecord
 
 export const setArenaStatus = async (roomId: string, status: ArenaStatus) => {
   await updateArena(roomId, { status });
+};
+
+export const getArena = async (roomId: string): Promise<ArenaRecord | null> => {
+  if (!firebaseEnabled || !db) return null;
+  const target = arenaDoc(roomId);
+  if (!target) return null;
+  const snap = await getDoc(target);
+  if (!snap.exists()) return null;
+  return snap.data() as ArenaRecord;
 };
 
 export const subscribeToArenas = (
