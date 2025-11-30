@@ -95,20 +95,24 @@ const LandingView: React.FC<LandingViewProps> = ({ onConnectWallet, onGuestEnter
         </p>
 
         {/* CTAs */}
-        <div className="flex flex-col sm:flex-row gap-5 w-full max-w-lg mb-20 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
-          <button
+        <div className="flex flex-col sm:flex-row gap-5 w-full max-w-2xl  mb-20 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
+          <div
             onClick={onConnectWallet}
-            className="flex-1 group relative px-8 py-4 bg-[#9945FF] text-white font-bold tracking-widest uppercase transition-all duration-300 rounded-lg shadow-[0_0_30px_rgba(153,69,255,0.4)] hover:shadow-[0_0_60px_rgba(153,69,255,0.6)] hover:scale-105 overflow-hidden ring-1 ring-[#9945FF]"
+            className="w-56 flex-1 group relative cursor-pointer  py-4 bg-[#9945FF] text-white font-bold 
+            tracking-widest uppercase transition-all duration-300 rounded-full 
+            shadow-[0_0_30px_rgba(153,69,255,0.4)] hover:shadow-[0_0_60px_rgba(153,69,255,0.6)] hover:scale-105 overflow-hidden ring-1 ring-[#9945FF]"
           >
             <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.4)_50%,transparent_75%)] w-[200%] h-full translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
             <div className="flex items-center justify-center gap-3 relative z-10">
               <Icons.Wallet size={20} />
-              <span>Connect Wallet</span>
+              <span>Wallet Login</span>
             </div>
-          </button>
+          </div>
           <button
             onClick={() => onGoogleLogin?.()}
-            className="flex-1 px-8 py-4 bg-white text-black font-bold tracking-widest uppercase transition-all duration-300 rounded-lg border border-white/10 hover:border-white/40 hover:scale-105 flex items-center justify-center gap-3"
+            className="w-56 flex-1  py-4 bg-white text-black font-bold 
+            tracking-widest uppercase transition-all duration-300 rounded-full border
+             border-white/10 hover:border-white/40 hover:scale-105 flex items-center justify-center gap-3"
             aria-label="Continue with Google"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 533.5 544.3" className="w-5 h-5">
@@ -117,15 +121,15 @@ const LandingView: React.FC<LandingViewProps> = ({ onConnectWallet, onGuestEnter
               <path fill="#fbbc04" d="M118.5 325.3c-11.8-34.6-11.8-71.6 0-106.2V148.2H30.3c-38.6 76.9-38.6 168.2 0 245.1l88.2-68z" />
               <path fill="#ea4335" d="M272 109.6c39.8 0 76 13.6 104.3 40.2l78.2-78.2C404.4 24.5 343 0 272 0 167.2 0 74.8 61.5 30.3 148.2l88.2 70.9C140 157.7 200.6 109.6 272 109.6z" />
             </svg>
-            <span>Continue with Google</span>
+            <span>Google Login</span>
           </button>
-          <button
+          {/* <button
             onClick={onGuestEnter}
             className="flex-1 px-8 py-4 bg-white/5 border border-white/10 hover:border-white/40 hover:bg-white/10 text-gray-300 hover:text-white font-bold tracking-widest uppercase transition-all duration-300 rounded-lg backdrop-blur-sm flex items-center justify-center gap-2 hover:scale-105"
           >
             <Icons.Eye size={20} />
             <span>Spectate</span>
-          </button>
+          </button> */}
         </div>
 
         {/* Scroll Indicator */}
