@@ -1,0 +1,8 @@
+{
+  "name": "Allies of Borderland",
+  "description": "A high-stakes survival card game where players stake tokens and survive AI-generated rounds. Features mock Web3 integration and live camera feeds.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
