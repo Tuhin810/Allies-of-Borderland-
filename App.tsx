@@ -7,6 +7,7 @@ import { generateRoundNarrative, generateGameIntro } from './services/geminiServ
 import { p2pService } from './services/p2p';
 import { solanaService, SolanaProfile } from './services/solana';
 import LandingPage from './pages/LandingPage';
+import ArenaPage from './pages/ArenaPage';
 import LobbyPage from './pages/LobbyPage';
 import GamePage from './pages/GamePage';
 import LoadingPage from './pages/LoadingPage';
@@ -324,6 +325,20 @@ const AppContent = () => {
       }
   }, [players]);
 
+  useEffect(() => {
+    if (!localPlayer) return;
+    const inGamePhase = gameState.phase !== GamePhase.LOBBY;
+    if (inGamePhase && normalizedPath !== '/game') {
+      navigate('/game', { replace: true });
+    } else if (!inGamePhase && normalizedPath === '/game') {
+      if (roomId) {
+        navigate('/lobby', { replace: true });
+      } else {
+        navigate('/arena', { replace: true });
+      }
+    }
+  }, [gameState.phase, localPlayer, navigate, normalizedPath, roomId]);
+
   // --- Actions ---
 
   const handleConnectWallet = async () => {
@@ -331,7 +346,7 @@ const AppContent = () => {
       const profile = await solanaService.connect();
       setSolanaProfile(profile);
         if (normalizedPath === '/') {
-          navigate('/lobby');
+          navigate('/arena');
       }
     } catch (e: any) {
       alert("Failed to connect wallet: " + e.message);
@@ -386,6 +401,7 @@ const AppContent = () => {
     setIsMultiplayer(true);
     const myId = await p2pService.init(false, asSpectator ? null : localStream);
     
+    setRoomId(inputRoomId);
     const me = { ...initLocalPlayer(asSpectator), peerId: myId };
     p2pService.connectToHost(inputRoomId, me);
     navigate('/lobby'); 
@@ -555,7 +571,23 @@ const AppContent = () => {
           element={
             <LandingPage 
               onConnectWallet={handleConnectWallet}
-              onGuestEnter={() => navigate('/lobby')}
+              onGuestEnter={() => navigate('/arena')}
+            />
+          }
+        />
+        <Route 
+          path="/arena"
+          element={
+            <ArenaPage 
+              solanaProfile={solanaProfile}
+              roomId={roomId}
+              inputRoomId={inputRoomId}
+              setInputRoomId={setInputRoomId}
+              players={players}
+              onStartSinglePlayer={startSinglePlayer}
+              onCreateRoom={createRoom}
+              onJoinRoom={joinRoom}
+              onStartMultiplayerGame={startMultiplayerGame}
             />
           }
         />
@@ -599,7 +631,7 @@ const AppContent = () => {
           element={
             <LandingPage 
               onConnectWallet={handleConnectWallet}
-              onGuestEnter={() => navigate('/lobby')}
+              onGuestEnter={() => navigate('/arena')}
             />
           }
         />

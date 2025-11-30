@@ -14,6 +14,7 @@ interface LobbyViewProps {
   onCreateRoom: () => void;
   onJoinRoom: (spectator: boolean) => void;
   onStartMultiplayerGame: () => void;
+  forceSelection?: boolean;
 }
 
 const LobbyView: React.FC<LobbyViewProps> = ({
@@ -25,7 +26,8 @@ const LobbyView: React.FC<LobbyViewProps> = ({
   onStartSinglePlayer,
   onCreateRoom,
   onJoinRoom,
-  onStartMultiplayerGame
+  onStartMultiplayerGame,
+  forceSelection = false
 }) => {
   const [hoveredMode, setHoveredMode] = useState<'solo' | 'multi' | null>(null);
   const [copied, setCopied] = useState(false);
@@ -75,12 +77,14 @@ const LobbyView: React.FC<LobbyViewProps> = ({
   };
 
   const handleInvite = () => {
-    const inviteLink = `${window.location.origin}?room=${roomId}`;
+    const inviteLink = `${window.location.origin}/arena?room=${roomId}`;
     navigator.clipboard.writeText(inviteLink);
     setInviteCopied(true);
     setLogs(prev => [...prev, `> Invite Link generated and copied.`]);
     setTimeout(() => setInviteCopied(false), 2000);
   }
+
+  const showSelection = forceSelection || !roomId;
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-20 px-6 relative overflow-hidden font-sans flex flex-col items-center justify-center">
@@ -111,7 +115,7 @@ const LobbyView: React.FC<LobbyViewProps> = ({
           </h1>
         </div>
 
-        {!roomId ? (
+        {showSelection ? (
           <div className="grid md:grid-cols-2 gap-8 w-full">
             
             {/* SOLO MODE CARD */}

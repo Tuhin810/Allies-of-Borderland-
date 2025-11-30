@@ -1,0 +1,22 @@
+import React from 'react';
+import LobbyView from '../components/LobbyView';
+import { SolanaProfile } from '../services/solana';
+import { Player } from '../types';
+
+interface ArenaPageProps {
+  solanaProfile: SolanaProfile | null;
+  roomId: string;
+  inputRoomId: string;
+  setInputRoomId: (val: string) => void;
+  players: Player[];
+  onStartSinglePlayer: () => void;
+  onCreateRoom: () => void;
+  onJoinRoom: (spectator: boolean) => void;
+  onStartMultiplayerGame: () => void;
+}
+
+const ArenaPage: React.FC<ArenaPageProps> = (props) => {
+  return <LobbyView {...props} forceSelection />;
+};
+
+export default ArenaPage;
