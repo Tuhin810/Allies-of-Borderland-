@@ -13,9 +13,10 @@ interface LobbyViewProps {
   localPlayer?: Player;
   onStartSinglePlayer: () => void;
   onCreateRoom: () => void;
-  onJoinRoom: (spectator: boolean) => void;
+  onJoinRoom: (spectator: boolean, targetRoomId?: string) => void;
   onStartMultiplayerGame: () => void;
   viewMode?: 'auto' | 'selection' | 'lobby';
+  bottomSlot?: React.ReactNode;
 }
 
 const LobbyView: React.FC<LobbyViewProps> = ({
@@ -29,7 +30,8 @@ const LobbyView: React.FC<LobbyViewProps> = ({
   onCreateRoom,
   onJoinRoom,
   onStartMultiplayerGame,
-  viewMode = 'auto'
+  viewMode = 'auto',
+  bottomSlot
 }) => {
   const [hoveredMode, setHoveredMode] = useState<'solo' | 'multi' | null>(null);
   const [copied, setCopied] = useState(false);
@@ -368,6 +370,12 @@ const LobbyView: React.FC<LobbyViewProps> = ({
                 )}
 
              </div>
+          </div>
+        )}
+
+        {bottomSlot && (
+          <div className="mt-16">
+            {bottomSlot}
           </div>
         )}
       </div>

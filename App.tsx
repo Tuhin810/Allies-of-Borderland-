@@ -6,6 +6,7 @@ import { GameState, Player, GamePhase, Suit, PlayerAction, ChatMessage, Role } f
 import { generateRoundNarrative, generateGameIntro } from './services/geminiService';
 import { p2pService } from './services/p2p';
 import { solanaService, SolanaProfile } from './services/solana';
+import { registerArena, setArenaStatus, updateArena } from './services/arenaRegistry';
 import LandingPage from './pages/LandingPage';
 import ArenaPage from './pages/ArenaPage';
 import LobbyPage from './pages/LobbyPage';
@@ -326,6 +327,15 @@ const AppContent = () => {
   }, [players]);
 
   useEffect(() => {
+    if (!p2pService.isHost || !roomId) return;
+    const activePlayers = players.filter(p => p.isAlive !== false && !p.isSpectator).length;
+    updateArena(roomId, {
+      playerCount: activePlayers,
+      status: gameState.phase === GamePhase.LOBBY ? 'waiting' : undefined
+    }).catch((err) => console.warn('Failed to sync arena roster', err));
+  }, [players.length, roomId, gameState.phase]);
+
+  useEffect(() => {
     if (!localPlayer) return;
     const inGamePhase = gameState.phase !== GamePhase.LOBBY;
     if (inGamePhase && normalizedPath !== '/game') {
@@ -388,11 +398,21 @@ const AppContent = () => {
     const host = { ...initLocalPlayer(), isHost: true, peerId: id };
     setPlayers([host]);
     setGameState(prev => ({ ...prev, narrative: "Waiting for citizens..." }));
+    registerArena({
+      roomId: id,
+      hostPeerId: id,
+      hostName: host.name,
+      status: 'waiting',
+      playerCount: 1,
+      capacity: 10,
+      buyIn: BUY_IN_AMOUNT
+    }).catch((err) => console.warn('Failed to register arena', err));
     navigate('/lobby'); 
   };
 
-  const joinRoom = async (asSpectator: boolean = false) => {
-    if (!inputRoomId) return;
+  const joinRoom = async (asSpectator: boolean = false, targetRoomId?: string) => {
+    const roomToJoin = targetRoomId || inputRoomId;
+    if (!roomToJoin) return;
     if (!asSpectator && !localStream) {
         alert("Camera access required to play.");
         return;
@@ -401,9 +421,10 @@ const AppContent = () => {
     setIsMultiplayer(true);
     const myId = await p2pService.init(false, asSpectator ? null : localStream);
     
-    setRoomId(inputRoomId);
+    setRoomId(roomToJoin);
+    setInputRoomId(roomToJoin);
     const me = { ...initLocalPlayer(asSpectator), peerId: myId };
-    p2pService.connectToHost(inputRoomId, me);
+    p2pService.connectToHost(roomToJoin, me);
     navigate('/lobby'); 
   };
 
@@ -420,6 +441,9 @@ const AppContent = () => {
   const startMultiplayerGame = async () => {
     if (!p2pService.isHost) return;
     startNewGame(players);
+    if (roomId) {
+      setArenaStatus(roomId, 'active').catch((err) => console.warn('Failed to mark arena active', err));
+    }
     navigate('/game');
   };
 
@@ -552,6 +576,9 @@ const AppContent = () => {
 
     setPlayers(resolvedPlayers);
     setGameState(finalState);
+    if (gameOver && roomId) {
+      setArenaStatus(roomId, 'ended').catch((err) => console.warn('Failed to close arena', err));
+    }
     p2pService.broadcast('STATE_UPDATE', finalState);
     p2pService.broadcast('WELCOME', { players: resolvedPlayers, gameState: finalState });
   };

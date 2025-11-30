@@ -12,7 +12,7 @@ interface LobbyPageProps {
   localPlayer?: Player;
   onStartSinglePlayer: () => void;
   onCreateRoom: () => void;
-  onJoinRoom: (spectator: boolean) => void;
+  onJoinRoom: (spectator: boolean, targetRoomId?: string) => void;
   onStartMultiplayerGame: () => void;
 }
 
