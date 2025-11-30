@@ -39,7 +39,7 @@ const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet }) => {
     <>
       {/* Floating Navbar Container */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 flex justify-center transition-all duration-300 ${isScrolled ? 'pt-4' : 'pt-6'
+        className={`fixed -top-3 left-0 right-0 z-50 flex justify-center transition-all duration-300 ${isScrolled ? 'pt-4' : 'pt-6'
           }`}
       >
         <div
@@ -202,7 +202,7 @@ const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet }) => {
       </nav>
 
       {/* Spacer to prevent content from hiding behind fixed nav */}
-      <div className="h-24"></div>
+      {/* <div className="h-24"></div> */}
     </>
   );
 };

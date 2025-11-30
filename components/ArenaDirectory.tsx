@@ -50,7 +50,7 @@ const ArenaCard: React.FC<{
 const ArenaDirectory: React.FC<ArenaDirectoryProps> = ({ waiting, active, onJoin, onSpectate, firebaseReady }) => {
   if (!firebaseReady) {
     return (
-      <div className="max-w-6xl mx-auto px-6 py-10 text-center text-gray-500 font-mono text-sm">
+      <div className="max-w-6xl mx-auto px-6 pt-4 text-center text-gray-500 font-mono text-sm">
         Configure Firebase env vars to enable global arena discovery.
       </div>
     );

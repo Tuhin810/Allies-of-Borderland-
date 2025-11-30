@@ -96,7 +96,7 @@ const LobbyView: React.FC<LobbyViewProps> = ({
   const showSelection = resolvedMode === 'selection';
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-20 px-6 relative overflow-hidden font-sans flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-[#050505] text-white pt-28 px-6 relative overflow-hidden font-sans flex flex-col items-center justify-center">
       
       {/* --- Background FX --- */}
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,_#1a103c_0%,_#000000_80%)] z-0 pointer-events-none"></div>
@@ -115,13 +115,24 @@ const LobbyView: React.FC<LobbyViewProps> = ({
         
         {/* Header */}
         <div className="mb-12 text-center" style={{ transform: `translate(${mousePos.x * -10}px, ${mousePos.y * -10}px)` }}>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-white/5 border border-white/10 text-xs font-mono uppercase tracking-widest text-gray-400 mb-4 hover:bg-white/10 transition-colors cursor-help" title="System Status: Operational">
+          {
+            showSelection && 
+             <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-white/5 border border-white/10 text-xs font-mono uppercase tracking-widest text-gray-400 mb-4 hover:bg-white/10 transition-colors cursor-help" title="System Status: Operational">
             <div className="w-2 h-2 bg-[#14F195] rounded-full animate-pulse"></div>
             System Online
           </div>
-          <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-600 drop-shadow-2xl">
+          }
+         
+          {
+            showSelection ?
+            <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-600 drop-shadow-2xl">
             Select <span className="text-[#9945FF]">Protocol</span>
           </h1>
+          :
+          <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-600 drop-shadow-2xl">
+            Game <span className="text-[#9945FF]">Lobby</span>
+          </h1>
+          }
         </div>
 
         {showSelection ? (

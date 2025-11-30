@@ -41,7 +41,7 @@ const ArenaPage: React.FC<ArenaPageProps> = (props) => {
       {...props}
       viewMode="selection"
       bottomSlot={
-        <div className="border-t border-white/5 pt-12">
+        <div className="border-t border-white/5 ">
           <ArenaDirectory 
             waiting={waitingArenas}
             active={activeArenas}
