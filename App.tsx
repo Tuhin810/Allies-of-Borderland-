@@ -4,6 +4,8 @@ import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-ro
 import Navbar from './components/Navbar';
 import { GameState, Player, GamePhase, Suit, PlayerAction, ChatMessage, Role } from './types';
 import { generateRoundNarrative, generateGameIntro } from './services/geminiService';
+import { signInWithGoogle, subscribeToAuthState } from './services/firebase';
+import type { User } from 'firebase/auth';
 import { p2pService } from './services/p2p';
 import { solanaService, SolanaProfile } from './services/solana';
 import { registerArena, setArenaStatus, updateArena } from './services/arenaRegistry';
@@ -63,6 +65,7 @@ const AppContent = () => {
 
   // Web3 State
   const [solanaProfile, setSolanaProfile] = useState<SolanaProfile | null>(null);
+  const [authUser, setAuthUser] = useState<User | null>(null);
 
   // Game State
   const [players, setPlayers] = useState<Player[]>([]);
@@ -97,6 +100,23 @@ const AppContent = () => {
   const processedRoundPhase = useRef<string>("");
 
   // Check URL Params for Invite Link
+  useEffect(() => {
+    // Subscribe to Firebase auth state changes
+    const unsub = subscribeToAuthState((user) => setAuthUser(user));
+    return () => unsub && unsub();
+  }, []);
+
+  const handleGoogleLogin = async () => {
+    try {
+      const res = await signInWithGoogle();
+      setAuthUser(res.user);
+      navigate('/arena');
+    } catch (e: any) {
+      console.error('Google login failed', e);
+      alert('Google login failed.');
+    }
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const roomParam = params.get('room');
@@ -407,9 +427,9 @@ const AppContent = () => {
   };
 
   const initLocalPlayer = (isSpectator: boolean = false) => {
-    const name = solanaProfile ? `Cit. ${solanaProfile.shortAddress}` : `Cit. ${Math.floor(Math.random() * 1000)}`;
-    const avatar = solanaProfile ? `https://api.dicebear.com/7.x/bottts/svg?seed=${solanaProfile.address}` : '';
-    const address = solanaProfile ? solanaProfile.address : `MockSolanaKey-${Math.random().toString(36)}`;
+    const name = solanaProfile ? `Cit. ${solanaProfile.shortAddress}` : authUser?.displayName ?? `Cit. ${Math.floor(Math.random() * 1000)}`;
+    const avatar = solanaProfile ? `https://api.dicebear.com/7.x/bottts/svg?seed=${solanaProfile.address}` : authUser?.photoURL ?? '';
+    const address = solanaProfile ? solanaProfile.address : authUser?.uid ?? `MockSolanaKey-${Math.random().toString(36)}`;
     
     return {
       id: solanaProfile ? solanaProfile.address : `p-${Math.random().toString(36).substr(2, 9)}`,
@@ -650,6 +670,7 @@ const AppContent = () => {
             <LandingPage 
               onConnectWallet={handleConnectWallet}
               onGuestEnter={() => navigate('/arena')}
+              onGoogleLogin={handleGoogleLogin}
             />
           }
         />
@@ -714,6 +735,7 @@ const AppContent = () => {
             <LandingPage 
               onConnectWallet={handleConnectWallet}
               onGuestEnter={() => navigate('/arena')}
+              onGoogleLogin={handleGoogleLogin}
             />
           }
         />

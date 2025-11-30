@@ -4,9 +4,10 @@ import { Icons } from './Icons';
 interface LandingViewProps {
   onConnectWallet: () => void;
   onGuestEnter: () => void;
+  onGoogleLogin?: () => void;
 }
 
-const LandingView: React.FC<LandingViewProps> = ({ onConnectWallet, onGuestEnter }) => {
+const LandingView: React.FC<LandingViewProps> = ({ onConnectWallet, onGuestEnter, onGoogleLogin }) => {
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -104,6 +105,19 @@ const LandingView: React.FC<LandingViewProps> = ({ onConnectWallet, onGuestEnter
               <Icons.Wallet size={20} />
               <span>Connect Wallet</span>
             </div>
+          </button>
+          <button 
+            onClick={() => onGoogleLogin?.()}
+            className="flex-1 px-8 py-4 bg-white text-black font-bold tracking-widest uppercase transition-all duration-300 rounded-lg border border-white/10 hover:border-white/40 hover:scale-105 flex items-center justify-center gap-3"
+            aria-label="Sign in with Google"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 533.5 544.3" className="w-5 h-5">
+              <path fill="#4285f4" d="M533.5 278.4c0-17-1.5-33.6-4.3-49.6H272v93.9h147.1c-6.4 34.6-25.4 63.9-54 83.6v69.4h87.1c51-47 80.3-116.2 80.3-197.3z"/>
+              <path fill="#34a853" d="M272 544.3c73.4 0 135.1-24.3 180.1-66.1l-87.1-69.4c-24.2 16.3-55.1 26-93 26-71.4 0-132-48.1-153.5-112.6H30.3v70.9C74.8 482.8 167.2 544.3 272 544.3z"/>
+              <path fill="#fbbc04" d="M118.5 325.3c-11.8-34.6-11.8-71.6 0-106.2V148.2H30.3c-38.6 76.9-38.6 168.2 0 245.1l88.2-68z"/>
+              <path fill="#ea4335" d="M272 109.6c39.8 0 76 13.6 104.3 40.2l78.2-78.2C404.4 24.5 343 0 272 0 167.2 0 74.8 61.5 30.3 148.2l88.2 70.9C140 157.7 200.6 109.6 272 109.6z"/>
+            </svg>
+            <span>Sign in with Google</span>
           </button>
           <button 
             onClick={onGuestEnter}
