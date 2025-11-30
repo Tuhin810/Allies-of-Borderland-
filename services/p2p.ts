@@ -217,6 +217,29 @@ export class P2PService {
     this.mediaConnections.clear();
     this.listeners.clear();
   }
+
+  disconnect() {
+    this.connections.forEach((conn) => {
+      try {
+        conn.close();
+      } catch (e) {
+        console.warn('Failed closing data connection', e);
+      }
+    });
+    this.mediaConnections.forEach((call) => {
+      try {
+        call.close();
+      } catch (e) {
+        console.warn('Failed closing media connection', e);
+      }
+    });
+    this.peer?.disconnect();
+    this.peer?.destroy();
+    this.connections.clear();
+    this.mediaConnections.clear();
+    this.myPeerId = null;
+    this.isHost = false;
+  }
 }
 
 export const p2pService = new P2PService();

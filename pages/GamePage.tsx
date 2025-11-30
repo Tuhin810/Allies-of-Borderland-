@@ -14,6 +14,7 @@ interface GamePageProps {
   localStream: MediaStream | null;
   remoteStreams: Map<string, MediaStream>;
   onAction: (type: 'GUESS_SUIT' | 'BRIBE', value: any) => void;
+   onLeave: () => void;
 }
 
 const GamePage: React.FC<GamePageProps> = ({
@@ -24,7 +25,8 @@ const GamePage: React.FC<GamePageProps> = ({
   onSendMessage,
   localStream,
   remoteStreams,
-  onAction
+   onAction,
+   onLeave
 }) => (
   <div className="h-screen bg-black flex flex-col overflow-hidden relative font-sans">
     <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-900 via-black to-black"></div>
@@ -52,7 +54,7 @@ const GamePage: React.FC<GamePageProps> = ({
         )}
       </div>
       <div className="flex items-center gap-2">
-         <button onClick={() => window.location.reload()} className="text-gray-500 hover:text-white text-sm uppercase transition-colors">Exit</button>
+         <button onClick={onLeave} className="text-gray-500 hover:text-white text-sm uppercase transition-colors">Exit</button>
       </div>
     </div>
 

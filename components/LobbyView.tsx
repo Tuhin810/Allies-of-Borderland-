@@ -17,6 +17,7 @@ interface LobbyViewProps {
   onStartMultiplayerGame: () => void;
   viewMode?: 'auto' | 'selection' | 'lobby';
   bottomSlot?: React.ReactNode;
+  onLeaveRoom?: () => void;
 }
 
 const LobbyView: React.FC<LobbyViewProps> = ({
@@ -31,7 +32,8 @@ const LobbyView: React.FC<LobbyViewProps> = ({
   onJoinRoom,
   onStartMultiplayerGame,
   viewMode = 'auto',
-  bottomSlot
+  bottomSlot,
+  onLeaveRoom
 }) => {
   const [hoveredMode, setHoveredMode] = useState<'solo' | 'multi' | null>(null);
   const [copied, setCopied] = useState(false);
@@ -367,6 +369,15 @@ const LobbyView: React.FC<LobbyViewProps> = ({
                   <div className="w-full py-5 text-center border border-white/10 rounded-xl text-gray-500 uppercase tracking-[0.2em] text-xs font-mono bg-white/5">
                     Waiting for host
                   </div>
+                )}
+
+                {roomId && onLeaveRoom && (
+                  <button
+                    onClick={onLeaveRoom}
+                    className="mt-4 w-full py-4 border border-red-500/30 text-red-300 uppercase tracking-[0.2em] text-xs font-bold rounded-xl hover:bg-red-500/10 transition-colors"
+                  >
+                    Leave Lobby
+                  </button>
                 )}
 
              </div>

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import { GameState, Player, GamePhase, Suit, PlayerAction, ChatMessage, Role } from './types';
@@ -37,6 +37,15 @@ const AI_PLAYERS: Player[] = [
   { id: 'p4', name: 'Daiki (AI)', avatar: AVATARS[2], hp: INITIAL_HP, isAlive: true, isLocal: false, betAmount: 0, balance: 2.1, solanaAddress: 'Ax...3D56', reputation: 50 },
 ];
 
+const createInitialGameState = (): GameState => ({
+  phase: GamePhase.LOBBY,
+  round: 0,
+  timer: DISCUSSION_TIME,
+  pot: 0,
+  narrative: 'Waiting for game to start...',
+  history: []
+});
+
 
 
 const AppContent = () => {
@@ -58,14 +67,7 @@ const AppContent = () => {
   // Game State
   const [players, setPlayers] = useState<Player[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [gameState, setGameState] = useState<GameState>({
-    phase: GamePhase.LOBBY,
-    round: 0,
-    timer: DISCUSSION_TIME,
-    pot: 0,
-    narrative: "Waiting for game to start...",
-    history: []
-  });
+  const [gameState, setGameState] = useState<GameState>(() => createInitialGameState());
 
   const localPlayer = players.find(p => p.isLocal);
 
@@ -142,17 +144,40 @@ const AppContent = () => {
 
   // --- Initialization ---
 
-  useEffect(() => {
-    const getMedia = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        setLocalStream(stream);
-      } catch (err) {
-        console.warn("Camera access denied or failed", err);
-      }
-    };
-    getMedia();
-  }, []);
+  const ensureLocalStream = async () => {
+    if (localStream) return localStream;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setLocalStream(stream);
+      return stream;
+    } catch (err) {
+      console.warn('Camera access denied or failed', err);
+      throw err;
+    }
+  };
+
+  const leaveRoom = useCallback((options?: { redirect?: boolean }) => {
+    if (!roomId && players.length === 0) {
+      return;
+    }
+
+    if (roomId && p2pService.isHost) {
+      setArenaStatus(roomId, 'ended').catch((err) => console.warn('Failed to close arena on exit', err));
+    }
+
+    p2pService.disconnect();
+    setPlayers([]);
+    setRemoteStreams(new Map());
+    setChatMessages([]);
+    setRoomId('');
+    setInputRoomId('');
+    setIsMultiplayer(false);
+    setGameState(createInitialGameState());
+
+    if (options?.redirect !== false) {
+      navigate('/arena', { replace: true });
+    }
+  }, [navigate, players.length, roomId]);
 
   // P2P Listeners
   useEffect(() => {
@@ -349,6 +374,24 @@ const AppContent = () => {
     }
   }, [gameState.phase, localPlayer, navigate, normalizedPath, roomId]);
 
+  useEffect(() => {
+    if (!roomId) return;
+    const allowed = new Set(['/arena', '/lobby', '/game', '/loading']);
+    if (!allowed.has(normalizedPath)) {
+      leaveRoom({ redirect: false });
+    }
+  }, [normalizedPath, roomId, leaveRoom]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (roomId) {
+        p2pService.disconnect();
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [roomId]);
+
   // --- Actions ---
 
   const handleConnectWallet = async () => {
@@ -386,13 +429,16 @@ const AppContent = () => {
   };
 
   const createRoom = async () => {
-    if (!localStream) {
-        alert("Camera access required to play.");
-        return;
+    let stream: MediaStream;
+    try {
+      stream = await ensureLocalStream();
+    } catch (err: any) {
+      alert('Camera access required to play.');
+      return;
     }
     navigate('/loading');
     setIsMultiplayer(true);
-    const id = await p2pService.init(true, localStream);
+    const id = await p2pService.init(true, stream);
     setRoomId(id);
     
     const host = { ...initLocalPlayer(), isHost: true, peerId: id };
@@ -413,13 +459,18 @@ const AppContent = () => {
   const joinRoom = async (asSpectator: boolean = false, targetRoomId?: string) => {
     const roomToJoin = targetRoomId || inputRoomId;
     if (!roomToJoin) return;
-    if (!asSpectator && !localStream) {
-        alert("Camera access required to play.");
+    let stream: MediaStream | null = null;
+    if (!asSpectator) {
+      try {
+        stream = await ensureLocalStream();
+      } catch (err: any) {
+        alert('Camera access required to play.');
         return;
+      }
     }
     navigate('/loading');
     setIsMultiplayer(true);
-    const myId = await p2pService.init(false, asSpectator ? null : localStream);
+    const myId = await p2pService.init(false, asSpectator ? null : stream);
     
     setRoomId(roomToJoin);
     setInputRoomId(roomToJoin);
@@ -633,6 +684,7 @@ const AppContent = () => {
               onCreateRoom={createRoom}
               onJoinRoom={joinRoom}
               onStartMultiplayerGame={startMultiplayerGame}
+              onLeaveRoom={leaveRoom}
             />
           }
         />
@@ -652,6 +704,7 @@ const AppContent = () => {
               localStream={localStream}
               remoteStreams={remoteStreams}
               onAction={handleAction}
+              onLeave={leaveRoom}
             />
           }
         />
