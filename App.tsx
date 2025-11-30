@@ -17,6 +17,7 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import FAQPage from './pages/FAQPage';
 import { useAuth } from './contexts/AuthContext';
 import ProfilePage from './pages/ProfilePage';
+import { solanaService } from './services/solana';
 
 // Constants
 const INITIAL_HP = 100;
@@ -417,8 +418,8 @@ const AppContent = () => {
     try {
       const profile = await solanaService.connect();
       setSolanaProfile(profile);
-        if (normalizedPath === '/') {
-          navigate('/arena');
+      if (normalizedPath === '/') {
+        navigate('/arena');
       }
     } catch (e: any) {
       alert('Failed to connect wallet: ' + (e?.message ?? 'Unknown error'));
@@ -429,7 +430,7 @@ const AppContent = () => {
     const name = solanaProfile ? `Cit. ${solanaProfile.shortAddress}` : `Cit. ${Math.floor(Math.random() * 1000)}`;
     const avatar = solanaProfile ? `https://api.dicebear.com/7.x/bottts/svg?seed=${solanaProfile.address}` : '';
     const address = solanaProfile ? solanaProfile.address : `MockSolanaKey-${Math.random().toString(36)}`;
-    
+
     return {
       id: solanaProfile?.address ?? userProfile?.id ?? `p-${Math.random().toString(36).substr(2, 9)}`,
       name,
