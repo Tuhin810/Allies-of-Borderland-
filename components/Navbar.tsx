@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Icons } from './Icons';
-import { Menu, X, Wallet } from 'lucide-react';
+import { Menu, X, Wallet, Coins } from 'lucide-react';
 import { SolanaProfile } from '../services/solana';
 import { Payment } from './Payment';
 import { BorderlandProfile } from '../types/profile';
+import { useTokens } from '../contexts/TokenContext';
+import { ECONOMY } from '../constants/economy';
 
 interface NavbarProps {
   solanaProfile: SolanaProfile | null;
@@ -18,6 +20,7 @@ const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet, userPro
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { tokenBalance } = useTokens();
 
   const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
   const isActive = (path: string) => normalizedPath === path;
@@ -119,14 +122,19 @@ const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet, userPro
                     <span className="text-xs font-bold text-white font-mono group-hover:text-[#14F195] transition-colors">
                       {userProfile.username}
                     </span>
-                    <span className="text-[10px] text-gray-400 font-mono uppercase tracking-widest">
-                      {userProfile.loginTag === 'google' ? 'Google Login' : 'Wallet Login'}
-                    </span>
-                    {typeof userProfile.walletBalance === 'number' && (
-                      <span className="text-[10px] text-[#14F195] font-mono">
-                        {userProfile.walletBalance.toFixed(2)} SOL
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-1 bg-gradient-to-r from-[#9945FF]/20 to-[#14F195]/20 px-2 py-0.5 rounded-full border border-[#9945FF]/30">
+                        <Coins size={10} className="text-[#14F195]" />
+                        <span className="text-[10px] text-[#14F195] font-mono font-bold">
+                          {tokenBalance} {ECONOMY.TOKEN_SYMBOL}
+                        </span>
+                      </div>
+                      {typeof userProfile.walletBalance === 'number' && (
+                        <span className="text-[10px] text-gray-400 font-mono">
+                          {userProfile.walletBalance.toFixed(2)} SOL
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#9945FF] to-[#14F195] p-[2px]">
                     {avatarUrl ? (

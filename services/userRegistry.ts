@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db, firebaseEnabled } from './firebase';
 import { BorderlandProfile, LoginType } from '../types/profile';
+import { ECONOMY } from '../constants/economy';
 
 const COLLECTION = 'users';
 
@@ -61,6 +62,7 @@ export const registerUser = async (
     avatarSeed,
     invitationCode,
     invitationLink: `${window.location.origin}/invite/${invitationCode}`,
+    rcTokens: ECONOMY.NEW_USER_BONUS, // Give new users 200 RC tokens
     accountStatus: 'active',
     loginType,
     loginTag: loginType,

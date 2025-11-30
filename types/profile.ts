@@ -9,6 +9,7 @@ export interface BorderlandProfile {
   walletAddress?: string;
   walletBalance?: number;
   walletMoney?: number;
+  rcTokens?: number; // Game tokens (RC)
   accountStatus: 'active' | 'suspended';
   accountAddress?: string;
   loginType: LoginType;
