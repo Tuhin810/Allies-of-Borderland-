@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Icons } from './Icons'; // Assuming you have Menu and X icons here, or use lucide-react
-import { Menu, X, Wallet } from 'lucide-react'; // Fallback imports if not in your Icons file
+import { Icons } from './Icons';
+import { Menu, X, Wallet } from 'lucide-react';
 import { SolanaProfile } from '../services/solana';
 import { Payment } from './Payment';
+import { BorderlandProfile } from '../types/profile';
 
 interface NavbarProps {
   solanaProfile: SolanaProfile | null;
   onConnectWallet: () => void;
+  userProfile?: BorderlandProfile | null;
+  onProfileNavigate?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet }) => {
+const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet, userProfile, onProfileNavigate }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -34,6 +37,15 @@ const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet }) => {
     { name: 'Leaderboard', path: '/leaderboard' },
     { name: 'FAQ', path: '/faq' },
   ];
+
+  if (userProfile) {
+    navLinks.push({ name: 'Profile', path: '/profile' });
+  }
+
+  const avatarSeed = userProfile?.avatarSeed ?? solanaProfile?.address;
+  const avatarUrl = avatarSeed
+    ? `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(avatarSeed)}`
+    : undefined;
 
   return (
     <>
@@ -98,7 +110,33 @@ const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet }) => {
             <div className="hidden md:flex items-center gap-4">
               <Payment />
 
-              {solanaProfile ? (
+              {userProfile ? (
+                <button
+                  onClick={() => onProfileNavigate?.()}
+                  className="flex items-center gap-3 pl-4 pr-2 py-1 bg-black/40 rounded-full border border-white/10 hover:border-[#14F195]/60 transition-all cursor-pointer group"
+                >
+                  <div className="flex flex-col items-end leading-none">
+                    <span className="text-xs font-bold text-white font-mono group-hover:text-[#14F195] transition-colors">
+                      {userProfile.username}
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-mono uppercase tracking-widest">
+                      {userProfile.loginTag === 'google' ? 'Google Login' : 'Wallet Login'}
+                    </span>
+                    {typeof userProfile.walletBalance === 'number' && (
+                      <span className="text-[10px] text-[#14F195] font-mono">
+                        {userProfile.walletBalance.toFixed(2)} SOL
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#9945FF] to-[#14F195] p-[2px]">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Avatar" className="w-full h-full rounded-full bg-black object-cover" />
+                    ) : (
+                      <div className="w-full h-full rounded-full bg-black" />
+                    )}
+                  </div>
+                </button>
+              ) : solanaProfile ? (
                 <div className="flex items-center gap-3 pl-4 pr-1 py-1 bg-black/40 rounded-full border border-white/10 hover:border-[#9945FF]/50 transition-all cursor-pointer group">
                   <div className="flex flex-col items-end leading-none">
                     <span className="text-xs font-bold text-white font-mono group-hover:text-[#9945FF] transition-colors">
@@ -132,14 +170,13 @@ const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet }) => {
 
             {/* Mobile Menu Toggle */}
             <div className="md:hidden flex items-center gap-4">
-              {/* Show simplified wallet on mobile if connected */}
-              {solanaProfile && (
+              {(userProfile || solanaProfile) && (
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#9945FF] to-[#14F195] p-[1px]">
-                  <img
-                    src={`https://api.dicebear.com/7.x/bottts/svg?seed=${solanaProfile.address}`}
-                    alt="Avatar"
-                    className="w-full h-full rounded-full bg-black"
-                  />
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className="w-full h-full rounded-full bg-black" />
+                  ) : (
+                    <div className="w-full h-full rounded-full bg-black" />
+                  )}
                 </div>
               )}
               <button
@@ -184,7 +221,7 @@ const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet }) => {
                 <div className="flex justify-center">
                   <Payment />
                 </div>
-                {!solanaProfile && (
+                {!userProfile && !solanaProfile && (
                   <button
                     onClick={() => {
                       onConnectWallet();
@@ -193,6 +230,17 @@ const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet }) => {
                     className="w-full py-3 bg-[#9945FF] text-black font-bold uppercase text-xs tracking-widest rounded-xl hover:bg-[#14F195] transition-colors shadow-[0_0_20px_rgba(153,69,255,0.4)]"
                   >
                     Connect Wallet
+                  </button>
+                )}
+                {userProfile && (
+                  <button
+                    onClick={() => {
+                      onProfileNavigate?.();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full py-3 bg-white/10 border border-white/20 text-white font-bold uppercase text-xs tracking-widest rounded-xl hover:bg-white/20 transition-colors"
+                  >
+                    Profile
                   </button>
                 )}
               </div>
