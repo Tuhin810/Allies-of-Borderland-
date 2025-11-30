@@ -38,9 +38,9 @@ const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet, userPro
     { name: 'FAQ', path: '/faq' },
   ];
 
-  if (userProfile) {
-    navLinks.push({ name: 'Profile', path: '/profile' });
-  }
+  // if (userProfile) {
+  //   navLinks.push({ name: 'Profile', path: '/profile' });
+  // }
 
   const avatarSeed = userProfile?.avatarSeed ?? solanaProfile?.address;
   const avatarUrl = avatarSeed

@@ -679,6 +679,8 @@ const AppContent = () => {
               onConnectWallet={handleConnectWallet}
               onGuestEnter={() => navigate('/arena')}
               onGoogleLogin={handleGoogleLogin}
+              userProfile={userProfile}
+              onGetStarted={() => navigate('/arena')}
             />
           }
         />
@@ -745,6 +747,8 @@ const AppContent = () => {
               onConnectWallet={handleConnectWallet}
               onGuestEnter={() => navigate('/arena')}
               onGoogleLogin={handleGoogleLogin}
+              userProfile={userProfile}
+              onGetStarted={() => navigate('/arena')}
             />
           }
         />
