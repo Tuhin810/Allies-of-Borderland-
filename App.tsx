@@ -17,7 +17,6 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import FAQPage from './pages/FAQPage';
 import { useAuth } from './contexts/AuthContext';
 import ProfilePage from './pages/ProfilePage';
-import { solanaService } from './services/solana';
 
 // Constants
 const INITIAL_HP = 100;
@@ -416,9 +415,10 @@ const AppContent = () => {
 
   const handleConnectWallet = async () => {
     try {
-      const profile = await solanaService.connect();
-      setSolanaProfile(profile);
-      if (normalizedPath === '/') {
+      const { needsProfile } = await loginWithWallet();
+      if (needsProfile) {
+        navigate('/profile?setup=wallet');
+      } else if (normalizedPath === '/') {
         navigate('/arena');
       }
     } catch (e: any) {

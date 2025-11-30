@@ -1,204 +1,205 @@
-# User Registry Implementation Summary
+# ✅ Implementation Complete - Summary
 
-## ✅ Implementation Complete
+## Features Implemented
 
-I've successfully implemented a user registry system similar to the `arenaRegistry` service. The system automatically handles both **login** (if user exists) and **registration** (if user doesn't exist) at the landing page.
+### 1. ✅ User Registry System (Auto Login/Register)
+- **Created**: `services/userRegistry.ts`
+- **Modified**: `contexts/AuthContext.tsx`
+- Automatically registers new users in Firestore `users` collection
+- If user exists → Login
+- If user doesn't exist → Auto-create account with defaults
+- Similar pattern to `arenaRegistry`
 
-## 📁 Files Created/Modified
+### 2. ✅ Logout Feature in Profile Page
+- **Modified**: `pages/ProfilePage.tsx`, `components/Icons.tsx`
+- Added logout button with confirmation dialog
+- Red danger styling for emphasis
+- Redirects to landing page after logout
+- Located next to "Back to Arena" button
 
-### 1. **NEW: `services/userRegistry.ts`**
-A comprehensive user authentication and registration service with the following features:
+### 3. ✅ Conditional Landing Page (Get Started vs Login)
+- **Modified**: `components/LandingView.tsx`, `pages/LandingPage.tsx`, `App.tsx`
+- **When logged in**: Shows single "Get Started" button with gradient
+- **When logged out**: Shows "Wallet Login" and "Google Login" buttons
+- Personalized welcome message for logged-in users
 
-**Main Functions:**
-- ✅ `loginOrRegisterUser()` - Auto-login or auto-register (main entry point)
-- ✅ `registerUser()` - Create new user account with auto-generated defaults
-- ✅ `fetchUser()` - Get user by ID
-- ✅ `fetchUserByWallet()` - Get user by wallet address
-- ✅ `updateUser()` - Update user profile
-- ✅ `updateUserBalance()` - Update wallet balance
-- ✅ `updateUserStatus()` - Update account status (active/suspended)
-
-**Auto-generated Defaults:**
-- Random 8-character invitation code
-- Random avatar seed
-- Default wallet balance: 0
-- Default account status: 'active'
-- Timestamps (createdAt, updatedAt)
-
-### 2. **MODIFIED: `contexts/AuthContext.tsx`**
-Updated to use the new `userRegistry` service:
-
-**Key Changes:**
-- ✅ Imports now use `loginOrRegisterUser`, `fetchUser`, `updateUser`
-- ✅ `fetchProfileDocument()` now auto-creates accounts if they don't exist
-- ✅ `loginWithWallet()` passes username and wallet address
-- ✅ `loginWithGoogle()` passes username from Google profile
-- ✅ `saveProfile()` uses `updateUser()` instead of full profile replacement
-
-### 3. **NEW: `docs/USER_REGISTRY_GUIDE.md`**
-Comprehensive documentation covering:
-- System architecture
-- Usage examples
-- Database structure
-- Migration guide
-- Testing instructions
-
-## 🔄 How It Works
-
-### When User Logs In at Landing Page:
-
-```
-1. User clicks "Connect Wallet" or "Sign in with Google"
-   ↓
-2. AuthContext.loginWithWallet() or loginWithGoogle() is called
-   ↓
-3. fetchProfileDocument(userId, loginType, username, walletAddress) is executed
-   ↓
-4. System checks: Does user exist in database?
-   ├─ YES → fetchUser() returns existing profile → USER LOGGED IN ✅
-   └─ NO  → loginOrRegisterUser() creates new account → USER REGISTERED & LOGGED IN ✅
-```
-
-## 🎯 Key Features
-
-1. **Seamless Onboarding** - No manual account creation required
-2. **Smart Defaults** - Auto-generated avatars, invitation codes, etc.
-3. **Dual Lookup** - Can find users by ID or wallet address
-4. **Consistent Pattern** - Follows same pattern as `arenaRegistry`
-5. **Type Safe** - Full TypeScript support
-6. **Firebase Integration** - Uses Firestore for persistence
-
-## 💾 Database Structure
-
-Users are stored in the `users` collection with this structure:
-
-```typescript
-{
-  id: string;                      // User ID (wallet or Google UID)
-  username: string;                // Display name
-  avatarSeed: string;             // For avatar generation
-  invitationCode: string;         // 8-char code (e.g., "A8F3K9L2")
-  invitationLink: string;         // Full URL with code
-  walletAddress?: string;         // Solana address (wallet login only)
-  walletBalance?: number;         // SOL balance
-  walletMoney?: number;           // Additional currency
-  accountStatus: 'active' | 'suspended';
-  accountAddress?: string;        // Wallet or email
-  loginType: 'wallet' | 'google';
-  loginTag: 'wallet' | 'google';
-  createdAt: number;              // Timestamp
-  updatedAt: number;              // Timestamp
-}
-```
-
-## 🧪 Testing
-
-To test the auto-registration:
-
-1. **Clear cookies**: Delete browser cookies or use incognito mode
-2. **Navigate to landing page**: Open http://localhost:3000
-3. **Click login button**: "Connect Wallet" or "Sign in with Google"
-4. **First time**: New account created automatically → You're logged in
-5. **Second time**: Existing account loaded → You're logged in
-6. **Verify**: Check Firestore console to see the user document
-
-## 🔧 Usage Examples
-
-### In Components (using AuthContext)
-```typescript
-import { useAuth } from './contexts/AuthContext';
-
-function MyComponent() {
-  const { loginWithWallet, profile } = useAuth();
-
-  const handleLogin = async () => {
-    await loginWithWallet();
-    // User is now logged in (account created if needed)
-  };
-
-  return profile ? (
-    <p>Welcome {profile.username}!</p>
-  ) : (
-    <button onClick={handleLogin}>Login</button>
-  );
-}
-```
-
-### Direct Usage (if needed)
-```typescript
-import { loginOrRegisterUser } from './services/userRegistry';
-
-const user = await loginOrRegisterUser(
-  'user-id',
-  'John Doe',
-  'wallet',
-  'wallet-address'
-);
-```
-
-## ✨ Benefits Over Old System
-
-| Old System | New System |
-|------------|------------|
-| Check if user exists | ✅ Check if user exists |
-| If not → Redirect to setup | ✅ If not → Auto-create account |
-| User fills form manually | ✅ Auto-generated defaults |
-| User clicks submit | ✅ Instant login |
-| Profile saved | ✅ Ready to play |
-
-## 🎮 Integration with Landing Page
-
-The integration is already complete! When users interact with the landing page:
-
-**Wallet Login Flow:**
-```
-Landing Page → "Connect Wallet" → 
-AuthContext.loginWithWallet() → 
-Solana wallet connects → 
-userRegistry.loginOrRegisterUser() → 
-User logged in & redirected to /arena
-```
-
-**Google Login Flow:**
-```
-Landing Page → "Sign in with Google" → 
-AuthContext.loginWithGoogle() → 
-Google OAuth completes → 
-userRegistry.loginOrRegisterUser() → 
-User logged in & redirected to /arena
-```
-
-## 📊 Comparison with arenaRegistry
-
-Both services follow the same pattern:
-
-| Feature | arenaRegistry | userRegistry |
-|---------|--------------|--------------|
-| Collection | `arenas` | `users` |
-| Main function | `registerArena()` | `loginOrRegisterUser()` |
-| Update function | `updateArena()` | `updateUser()` |
-| Fetch function | N/A | `fetchUser()` |
-| Subscribe function | `subscribeToArenas()` | N/A (could be added) |
-| Auto-timestamps | ✅ Yes | ✅ Yes |
-| Status tracking | ✅ Yes | ✅ Yes |
-
-## 🚀 Next Steps
-
-You can now:
-1. ✅ Test the auto-login/register flow
-2. ✅ Users can immediately start playing after connecting wallet
-3. ✅ Customize profiles later through the profile page
-4. ✅ Track user data in Firestore
-
-## 📝 Notes
-
-- **No breaking changes** - Existing functionality preserved
-- **TypeScript compilation**: ✅ Passes (no errors)
-- **Session management**: ✅ Cookie-based persistence included
-- **Error handling**: ✅ Graceful fallbacks implemented
+### 4. ✅ Bug Fixes
+- Fixed Firestore undefined values error
+- Fixed App.tsx after git pull merge conflict
+- Removed unused imports
 
 ---
 
-**Implementation Status: ✅ COMPLETE**
+## File Changes Summary
 
-The system is ready to use! Users will now be automatically registered when they first log in at the landing page.
+### Created Files:
+1. `services/userRegistry.ts` - Auto login/register service
+2. `docs/USER_REGISTRY_GUIDE.md` - Complete documentation
+3. `docs/GOOGLE_LOGIN_GUIDE.md` - Google login flow guide
+4. `docs/IMPLEMENTATION_SUMMARY.md` - Implementation details
+5. `docs/CURRENT_STATUS.md` - Current status overview
+6. `docs/BUG_FIX_UNDEFINED_VALUES.md` - Bug fix documentation
+
+### Modified Files:
+1. `contexts/AuthContext.tsx`
+   - Uses `userRegistry` instead of `userProfiles`
+   - Auto-creates accounts on login
+   
+2. `pages/ProfilePage.tsx`
+   - Added logout button
+   - Added handleLogout function
+   - Confirmation dialog before logout
+
+3. `components/Icons.tsx`
+   - Added `LogOut` icon
+
+4. `components/LandingView.tsx`
+   - Conditional rendering based on login status
+   - "Get Started" button for logged-in users
+   - Login buttons for logged-out users
+   - User changed button text to "Wallet Login" and "Google Login"
+
+5. `pages/LandingPage.tsx`
+   - Accepts `userProfile` and `onGetStarted` props
+   - Passes profile data to LandingView
+
+6. `App.tsx`
+   - Passes `userProfile` to LandingPage
+   - Passes `onGetStarted` handler
+   - Fixed `handleConnectWallet` to use `loginWithWallet()`
+   - Removed unused `solanaService` import
+
+7. `services/userRegistry.ts`
+   - Clean undefined values before Firestore save
+   - Conditional wallet fields for wallet logins only
+
+---
+
+## How It Works Now
+
+### Landing Page Flow:
+
+```
+User opens landing page
+  ↓
+Check: Is user logged in?
+  ↓
+├─ YES (logged in)
+│  └─ Show: "Get Started" button
+│     └─ Click → Navigate to /arena
+│
+└─ NO (logged out)
+   └─ Show: "Wallet Login" + "Google Login" buttons
+      ├─ Wallet Login → loginWithWallet()
+      │  └─ Auto-register if new user
+      │  └─ Navigate to /arena
+      │
+      └─ Google Login → loginWithGoogle()
+         └─ Auto-register if new user
+         └─ Navigate to /arena
+```
+
+### Profile Page Flow:
+
+```
+User on Profile Page
+  ↓
+Two buttons available:
+  ├─ "Back to Arena" → Navigate to /arena
+  └─ "Logout" (Red) → Confirmation dialog
+     └─ Yes → logout() → Navigate to /
+```
+
+### Auto-Registration Flow:
+
+```
+User clicks login button
+  ↓
+Google/Wallet authentication
+  ↓
+fetchProfileDocument()
+  ↓
+Check: User exists in Firestore?
+  ↓
+├─ YES → fetchUser() → Login ✅
+└─ NO → loginOrRegisterUser()
+   └─ Create account with:
+      • Random invitation code
+      • Random avatar seed
+      • Active status
+      • Timestamps
+   └─ Save to Firestore
+   └─ Login ✅
+```
+
+---
+
+## Database Structure
+
+### Firestore Collections:
+
+```
+📦 Firestore
+ ┣ 📁 arenas
+ ┃ ┗ 📄 {roomId}
+ ┃   ┣ hostName
+ ┃   ┣ status
+ ┃   └ playerCount
+ ┗ 📁 users
+   ┗ 📄 {userId}
+     ┣ id
+     ┣ username
+     ┣ avatarSeed
+     ┣ invitationCode
+     ┣ loginType (google/wallet)
+     ┣ accountStatus
+     ┣ walletAddress (wallet only)
+     ┣ createdAt
+     └ updatedAt
+```
+
+---
+
+## Testing Checklist
+
+### ✅ Logout Feature:
+1. Visit `/profile` page
+2. Click "Logout" button (red)
+3. Confirm in dialog
+4. ✅ Should redirect to landing page
+5. ✅ Should clear session
+
+### ✅ Conditional Landing:
+1. **When Logged Out**:
+   - Visit `/`
+   - ✅ Should see "Wallet Login" and "Google Login" buttons
+   
+2. **When Logged In**:
+   - Login with Google or Wallet
+   - Visit `/`
+   - ✅ Should see "Get Started" button
+   - ✅ Should see welcome message with username
+
+### ✅ Auto-Registration:
+1. Clear cookies/use incognito
+2. Click "Google Login"
+3. Select Google account
+4. ✅ First time: Account created in Firestore
+5. ✅ Redirected to /arena
+6. Logout and login again
+7. ✅ Second time: Login with existing account
+
+---
+
+## Current Status: ✅ READY TO USE
+
+All features are implemented and working:
+- ✅ Auto login/register system
+- ✅ Logout button in profile page
+- ✅ Conditional landing page UI
+- ✅ Bug fixes applied
+- ✅ Git merge conflicts resolved
+- ✅ Code cleaned up
+- ✅ TypeScript compilation passing
+
+**Go ahead and test it!** 🚀
