@@ -9,6 +9,7 @@ interface ArenaPageProps {
   inputRoomId: string;
   setInputRoomId: (val: string) => void;
   players: Player[];
+  localPlayer?: Player;
   onStartSinglePlayer: () => void;
   onCreateRoom: () => void;
   onJoinRoom: (spectator: boolean) => void;
@@ -16,7 +17,7 @@ interface ArenaPageProps {
 }
 
 const ArenaPage: React.FC<ArenaPageProps> = (props) => {
-  return <LobbyView {...props} forceSelection />;
+  return <LobbyView {...props} viewMode="selection" />;
 };
 
 export default ArenaPage;

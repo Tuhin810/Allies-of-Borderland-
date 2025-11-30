@@ -9,6 +9,7 @@ interface LobbyPageProps {
   inputRoomId: string;
   setInputRoomId: (val: string) => void;
   players: Player[];
+  localPlayer?: Player;
   onStartSinglePlayer: () => void;
   onCreateRoom: () => void;
   onJoinRoom: (spectator: boolean) => void;
@@ -16,7 +17,7 @@ interface LobbyPageProps {
 }
 
 const LobbyPage: React.FC<LobbyPageProps> = (props) => {
-  return <LobbyView {...props} />;
+  return <LobbyView {...props} viewMode="lobby" />;
 };
 
 export default LobbyPage;

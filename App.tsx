@@ -584,6 +584,7 @@ const AppContent = () => {
               inputRoomId={inputRoomId}
               setInputRoomId={setInputRoomId}
               players={players}
+              localPlayer={localPlayer}
               onStartSinglePlayer={startSinglePlayer}
               onCreateRoom={createRoom}
               onJoinRoom={joinRoom}
@@ -600,6 +601,7 @@ const AppContent = () => {
               inputRoomId={inputRoomId}
               setInputRoomId={setInputRoomId}
               players={players}
+              localPlayer={localPlayer}
               onStartSinglePlayer={startSinglePlayer}
               onCreateRoom={createRoom}
               onJoinRoom={joinRoom}

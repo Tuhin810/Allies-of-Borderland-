@@ -10,11 +10,12 @@ interface LobbyViewProps {
   inputRoomId: string;
   setInputRoomId: (val: string) => void;
   players: Player[];
+  localPlayer?: Player;
   onStartSinglePlayer: () => void;
   onCreateRoom: () => void;
   onJoinRoom: (spectator: boolean) => void;
   onStartMultiplayerGame: () => void;
-  forceSelection?: boolean;
+  viewMode?: 'auto' | 'selection' | 'lobby';
 }
 
 const LobbyView: React.FC<LobbyViewProps> = ({
@@ -23,11 +24,12 @@ const LobbyView: React.FC<LobbyViewProps> = ({
   inputRoomId,
   setInputRoomId,
   players,
+  localPlayer,
   onStartSinglePlayer,
   onCreateRoom,
   onJoinRoom,
   onStartMultiplayerGame,
-  forceSelection = false
+  viewMode = 'auto'
 }) => {
   const [hoveredMode, setHoveredMode] = useState<'solo' | 'multi' | null>(null);
   const [copied, setCopied] = useState(false);
@@ -84,7 +86,10 @@ const LobbyView: React.FC<LobbyViewProps> = ({
     setTimeout(() => setInviteCopied(false), 2000);
   }
 
-  const showSelection = forceSelection || !roomId;
+  const resolvedMode = viewMode === 'auto'
+    ? (roomId ? 'lobby' : 'selection')
+    : viewMode;
+  const showSelection = resolvedMode === 'selection';
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-20 px-6 relative overflow-hidden font-sans flex flex-col items-center justify-center">
@@ -346,15 +351,21 @@ const LobbyView: React.FC<LobbyViewProps> = ({
                 </div>
 
                 {/* Actions */}
-                <button 
-                  onClick={onStartMultiplayerGame}
-                  className="w-full py-5 bg-white text-black font-black uppercase tracking-[0.2em] text-lg rounded-xl hover:bg-[#14F195] transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_50px_rgba(20,241,149,0.4)] relative overflow-hidden group active:scale-[0.98]"
-                >
-                   <span className="relative z-10 flex items-center justify-center gap-3">
-                      <Icons.Zap className="group-hover:animate-bounce" /> Initiate Game Sequence
-                   </span>
-                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
-                </button>
+                {localPlayer?.isHost ? (
+                  <button 
+                    onClick={onStartMultiplayerGame}
+                    className="w-full py-5 bg-white text-black font-black uppercase tracking-[0.2em] text-lg rounded-xl hover:bg-[#14F195] transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_50px_rgba(20,241,149,0.4)] relative overflow-hidden group active:scale-[0.98]"
+                  >
+                     <span className="relative z-10 flex items-center justify-center gap-3">
+                        <Icons.Zap className="group-hover:animate-bounce" /> Initiate Game Sequence
+                     </span>
+                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
+                  </button>
+                ) : (
+                  <div className="w-full py-5 text-center border border-white/10 rounded-xl text-gray-500 uppercase tracking-[0.2em] text-xs font-mono bg-white/5">
+                    Waiting for host
+                  </div>
+                )}
 
              </div>
           </div>
