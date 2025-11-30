@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { TokenProvider } from './contexts/TokenContext';
 import Navbar from './components/Navbar';
 import { GameState, Player, GamePhase, Suit, PlayerAction, ChatMessage, Role } from './types';
 import { generateRoundNarrative, generateGameIntro } from './services/geminiService';
@@ -414,11 +415,10 @@ const AppContent = () => {
 
   const handleConnectWallet = async () => {
     try {
-      const { needsProfile } = await loginWithWallet();
-      if (needsProfile) {
-        navigate('/profile?setup=wallet');
-      } else if (normalizedPath === '/') {
-        navigate('/arena');
+      const profile = await solanaService.connect();
+      setSolanaProfile(profile);
+        if (normalizedPath === '/') {
+          navigate('/arena');
       }
     } catch (e: any) {
       alert('Failed to connect wallet: ' + (e?.message ?? 'Unknown error'));
@@ -426,17 +426,10 @@ const AppContent = () => {
   };
 
   const initLocalPlayer = (isSpectator: boolean = false) => {
-    const name = userProfile?.username
-      ?? (solanaProfile ? `Cit. ${solanaProfile.shortAddress}` : `Cit. ${Math.floor(Math.random() * 1000)}`);
-    const avatarSeed = userProfile?.avatarSeed
-      ?? solanaProfile?.address
-      ?? userProfile?.accountAddress
-      ?? `citizen-${Math.floor(Math.random() * 10000)}`;
-    const avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(avatarSeed)}`;
-    const address = solanaProfile?.address
-      ?? userProfile?.accountAddress
-      ?? `MockSolanaKey-${Math.random().toString(36)}`;
-
+    const name = solanaProfile ? `Cit. ${solanaProfile.shortAddress}` : `Cit. ${Math.floor(Math.random() * 1000)}`;
+    const avatar = solanaProfile ? `https://api.dicebear.com/7.x/bottts/svg?seed=${solanaProfile.address}` : '';
+    const address = solanaProfile ? solanaProfile.address : `MockSolanaKey-${Math.random().toString(36)}`;
+    
     return {
       id: solanaProfile?.address ?? userProfile?.id ?? `p-${Math.random().toString(36).substr(2, 9)}`,
       name,
@@ -754,9 +747,11 @@ const AppContent = () => {
 };
 
 const App = () => (
-  <BrowserRouter>
-    <AppContent />
-  </BrowserRouter>
+  <TokenProvider>
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  </TokenProvider>
 );
 
 export default App;
