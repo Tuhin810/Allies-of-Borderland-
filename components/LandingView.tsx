@@ -1,13 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { Icons } from './Icons';
+import { BorderlandProfile } from '../types/profile';
 
 interface LandingViewProps {
   onConnectWallet: () => void;
   onGuestEnter: () => void;
   onGoogleLogin?: () => void;
+  userProfile?: BorderlandProfile | null;
+  onGetStarted?: () => void;
 }
 
-const LandingView: React.FC<LandingViewProps> = ({ onConnectWallet, onGuestEnter, onGoogleLogin }) => {
+const LandingView: React.FC<LandingViewProps> = ({
+  onConnectWallet,
+  onGuestEnter,
+  onGoogleLogin,
+  userProfile,
+  onGetStarted
+}) => {
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -95,37 +104,68 @@ const LandingView: React.FC<LandingViewProps> = ({ onConnectWallet, onGuestEnter
         </p>
 
         {/* CTAs */}
-        <div className="flex flex-col sm:flex-row gap-5 w-full max-w-lg mb-20 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
-          <button
-            onClick={onConnectWallet}
-            className="flex-1 group relative px-8 py-4 bg-[#9945FF] text-white font-bold tracking-widest uppercase transition-all duration-300 rounded-lg shadow-[0_0_30px_rgba(153,69,255,0.4)] hover:shadow-[0_0_60px_rgba(153,69,255,0.6)] hover:scale-105 overflow-hidden ring-1 ring-[#9945FF]"
-          >
-            <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.4)_50%,transparent_75%)] w-[200%] h-full translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
-            <div className="flex items-center justify-center gap-3 relative z-10">
-              <Icons.Wallet size={20} />
-              <span>Connect Wallet</span>
-            </div>
-          </button>
-          <button
-            onClick={() => onGoogleLogin?.()}
-            className="flex-1 px-8 py-4 bg-white text-black font-bold tracking-widest uppercase transition-all duration-300 rounded-lg border border-white/10 hover:border-white/40 hover:scale-105 flex items-center justify-center gap-3"
-            aria-label="Continue with Google"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 533.5 544.3" className="w-5 h-5">
-              <path fill="#4285f4" d="M533.5 278.4c0-17-1.5-33.6-4.3-49.6H272v93.9h147.1c-6.4 34.6-25.4 63.9-54 83.6v69.4h87.1c51-47 80.3-116.2 80.3-197.3z" />
-              <path fill="#34a853" d="M272 544.3c73.4 0 135.1-24.3 180.1-66.1l-87.1-69.4c-24.2 16.3-55.1 26-93 26-71.4 0-132-48.1-153.5-112.6H30.3v70.9C74.8 482.8 167.2 544.3 272 544.3z" />
-              <path fill="#fbbc04" d="M118.5 325.3c-11.8-34.6-11.8-71.6 0-106.2V148.2H30.3c-38.6 76.9-38.6 168.2 0 245.1l88.2-68z" />
-              <path fill="#ea4335" d="M272 109.6c39.8 0 76 13.6 104.3 40.2l78.2-78.2C404.4 24.5 343 0 272 0 167.2 0 74.8 61.5 30.3 148.2l88.2 70.9C140 157.7 200.6 109.6 272 109.6z" />
-            </svg>
-            <span>Continue with Google</span>
-          </button>
-          <button
+        <div className="flex flex-col sm:flex-row gap-5 w-full max-w-2xl  mb-20 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
+          {userProfile ? (
+            // Logged in - Show Get Started
+            // <button
+            //   onClick={onGetStarted}
+            //   className="w-full group relative px-8 py-5 bg-gradient-to-r from-[#9945FF] to-[#14F195] text-white font-bold tracking-widest uppercase transition-all duration-300 rounded-full shadow-[0_0_40px_rgba(153,69,255,0.5)] hover:shadow-[0_0_80px_rgba(153,69,255,0.7)] hover:scale-105 overflow-hidden"
+            // >
+            //   <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.4)_50%,transparent_75%)] w-[200%] h-full translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
+            //   <div className="flex items-center justify-center gap-3 relative z-10">
+            //     <Icons.PlayCircle size={24} />
+            //     <span className="text-lg">Get Started</span>
+            //   </div>
+
+            // </button>
+            <button
+              onClick={onGetStarted}
+              class="group mx-auto relative bg-slate-900 h-16 w-80 border-2 border-teal-600 text-white text-lg
+               font-bold rounded-full overflow-hidden  text-center
+               transform transition-all duration-500 hover:scale-105 hover:border-emerald-400 hover:text-emerald-300 p-3 text-left before:absolute before:w-10 before:h-10 before:content[''] before:right-2 before:top-2 before:z-10 before:bg-indigo-500 before:rounded-full before:blur-lg before:transition-all before:duration-500 after:absolute after:z-10 after:w-16 after:h-16 after:content[''] after:bg-teal-400 after:right-6 after:top-4 after:rounded-full after:blur-lg after:transition-all after:duration-500 hover:before:right-10 hover:before:-bottom-4 hover:before:blur hover:after:-right-6 hover:after:scale-110"
+            >
+              Get Started
+            </button>
+
+          ) : (
+            // Logged out - Show login buttons
+            <>
+              <div
+                onClick={onConnectWallet}
+                className="w-56 flex-1 group relative cursor-pointer  py-4 bg-[#9945FF] text-white font-bold 
+                tracking-widest uppercase transition-all duration-300 rounded-full 
+                shadow-[0_0_30px_rgba(153,69,255,0.4)] hover:shadow-[0_0_60px_rgba(153,69,255,0.6)] hover:scale-105 overflow-hidden ring-1 ring-[#9945FF]"
+              >
+                <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.4)_50%,transparent_75%)] w-[200%] h-full translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
+                <div className="flex items-center justify-center gap-3 relative z-10">
+                  <Icons.Wallet size={20} />
+                  <span>Wallet Login</span>
+                </div>
+              </div>
+              <button
+                onClick={() => onGoogleLogin?.()}
+                className="w-56 flex-1  py-4 bg-white text-black font-bold 
+                tracking-widest uppercase transition-all duration-300 rounded-full border
+                 border-white/10 hover:border-white/40 hover:scale-105 flex items-center justify-center gap-3"
+                aria-label="Continue with Google"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 533.5 544.3" className="w-5 h-5">
+                  <path fill="#4285f4" d="M533.5 278.4c0-17-1.5-33.6-4.3-49.6H272v93.9h147.1c-6.4 34.6-25.4 63.9-54 83.6v69.4h87.1c51-47 80.3-116.2 80.3-197.3z" />
+                  <path fill="#34a853" d="M272 544.3c73.4 0 135.1-24.3 180.1-66.1l-87.1-69.4c-24.2 16.3-55.1 26-93 26-71.4 0-132-48.1-153.5-112.6H30.3v70.9C74.8 482.8 167.2 544.3 272 544.3z" />
+                  <path fill="##fbbc04" d="M118.5 325.3c-11.8-34.6-11.8-71.6 0-106.2V148.2H30.3c-38.6 76.9-38.6 168.2 0 245.1l88.2-68z" />
+                  <path fill="#ea4335" d="M272 109.6c39.8 0 76 13.6 104.3 40.2l78.2-78.2C404.4 24.5 343 0 272 0 167.2 0 74.8 61.5 30.3 148.2l88.2 70.9C140 157.7 200.6 109.6 272 109.6z" />
+                </svg>
+                <span>Google Login</span>
+              </button>
+            </>
+          )}
+          {/* <button
             onClick={onGuestEnter}
             className="flex-1 px-8 py-4 bg-white/5 border border-white/10 hover:border-white/40 hover:bg-white/10 text-gray-300 hover:text-white font-bold tracking-widest uppercase transition-all duration-300 rounded-lg backdrop-blur-sm flex items-center justify-center gap-2 hover:scale-105"
           >
             <Icons.Eye size={20} />
             <span>Spectate</span>
-          </button>
+          </button> */}
         </div>
 
         {/* Scroll Indicator */}

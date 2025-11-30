@@ -9,7 +9,7 @@ const generateSeed = () => `citizen-${Math.floor(Math.random() * 999999)}`;
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { profile, saveProfile, needsProfileSetup, solanaProfile, loginType, firebaseUser } = useAuth();
+  const { profile, saveProfile, needsProfileSetup, solanaProfile, loginType, firebaseUser, logout } = useAuth();
   const [formState, setFormState] = useState<ProfileFormInput>({
     username: profile?.username || firebaseUser?.displayName || 'Borderland Citizen',
     avatarSeed: profile?.avatarSeed || solanaProfile?.address || firebaseUser?.uid || generateSeed(),
@@ -68,8 +68,20 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const handleLogout = async () => {
+    if (window.confirm('Are you sure you want to logout?')) {
+      try {
+        await logout();
+        navigate('/', { replace: true });
+      } catch (err) {
+        console.error('Logout failed', err);
+        setStatusMessage('Logout failed. Please try again.');
+      }
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-24 pb-16 px-6">
+    <div className="min-h-screen bg-[#050505] text-white pt-28 pb-16 px-6">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center gap-4 mb-10">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#9945FF] to-[#14F195] flex items-center justify-center text-2xl font-black">
@@ -136,7 +148,7 @@ const ProfilePage: React.FC = () => {
               )}
             </div>
 
-            <div>
+            {/* <div>
               <label className="text-xs uppercase tracking-[0.3em] text-gray-400 font-mono">Account Status</label>
               <select
                 value={formState.accountStatus}
@@ -146,7 +158,7 @@ const ProfilePage: React.FC = () => {
                 <option value="active">Active</option>
                 <option value="suspended">Suspended</option>
               </select>
-            </div>
+            </div> */}
 
             <button
               type="submit"
@@ -189,13 +201,23 @@ const ProfilePage: React.FC = () => {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => navigate('/arena')}
-              className="w-full py-3 rounded-2xl border border-white/10 text-sm uppercase tracking-[0.3em] hover:bg-white/10"
-            >
-              Back to Arena
-            </button>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => navigate('/arena')}
+                className="flex-1 py-3 rounded-2xl border border-white/10 text-sm uppercase tracking-[0.3em] hover:bg-white/10 transition-all"
+              >
+                Back to Arena
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex-1 py-3 rounded-2xl border border-red-500/30 bg-red-500/10 text-red-500 text-sm uppercase tracking-[0.3em] hover:bg-red-500/20 hover:border-red-500/50 transition-all flex items-center justify-center gap-2"
+              >
+                <Icons.LogOut size={16} />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </div>

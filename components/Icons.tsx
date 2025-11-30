@@ -1,20 +1,19 @@
-
 import React from 'react';
-import { 
-  Heart, 
-  Diamond, 
-  Club, 
-  Spade, 
-  Skull, 
-  Trophy, 
-  Users, 
-  Mic, 
-  MicOff, 
-  Video, 
-  VideoOff, 
-  Wallet, 
-  Activity, 
-  ShieldAlert, 
+import {
+  Heart,
+  Diamond,
+  Club,
+  Spade,
+  Skull,
+  Trophy,
+  Users,
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  Wallet,
+  Activity,
+  ShieldAlert,
   Coins,
   LayoutGrid,
   MessageSquare,
@@ -40,7 +39,8 @@ import {
   Wifi,
   WifiOff,
   Signal,
-  Share2
+  Share2,
+  LogOut
 } from 'lucide-react';
 
 export const Icons = {
@@ -83,5 +83,6 @@ export const Icons = {
   Wifi,
   WifiOff,
   Signal,
-  Share2
+  Share2,
+  LogOut
 };
