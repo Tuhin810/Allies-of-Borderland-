@@ -38,6 +38,7 @@ const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet, userPro
     { name: 'Home', path: '/' },
     { name: 'Features', path: '/features' },
     { name: 'Leaderboard', path: '/leaderboard' },
+    { name: 'Token Shop', path: '/payment' },
     { name: 'FAQ', path: '/faq' },
   ];
 
@@ -111,15 +112,15 @@ const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet, userPro
 
             {/* Right Side Actions */}
             <div className="hidden md:flex items-center gap-4">
-              <Payment />
+              {/* <Payment /> */}
 
               {userProfile ? (
                 <button
                   onClick={() => onProfileNavigate?.()}
-                  className="flex items-center gap-3 pl-4 pr-2 py-1 bg-black/40 rounded-full border border-white/10 hover:border-[#14F195]/60 transition-all cursor-pointer group"
+                  className="flex items-center gap-3 pl-4 pr-2 py-1 bg-black/40 rounded-full border border-white/20 hover:border-[#14F195]/60 transition-all cursor-pointer group"
                 >
                   <div className="flex flex-col items-end leading-none">
-                    <span className="text-xs font-bold text-white font-mono group-hover:text-[#14F195] transition-colors">
+                    <span className="text-xs font-bold text-hite font-mono text-white group-hover:text-[#14F195] transition-colors">
                       {userProfile.username}
                     </span>
                     <div className="flex items-center gap-2 mt-1">
@@ -129,11 +130,14 @@ const Navbar: React.FC<NavbarProps> = ({ solanaProfile, onConnectWallet, userPro
                           {tokenBalance} {ECONOMY.TOKEN_SYMBOL}
                         </span>
                       </div>
-                      {typeof userProfile.walletBalance === 'number' && (
+                      {/* {typeof userProfile.walletBalance === 'number' && (
                         <span className="text-[10px] text-gray-400 font-mono">
                           {userProfile.walletBalance.toFixed(2)} SOL
                         </span>
-                      )}
+                      )} */}
+                      {/* <span className="text-[10px] text-gray-400 font-mono">
+                        View Profile
+                      </span> */}
                     </div>
                   </div>
                   <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#9945FF] to-[#14F195] p-[2px]">

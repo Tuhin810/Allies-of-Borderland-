@@ -17,6 +17,7 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import FAQPage from './pages/FAQPage';
 import { useAuth } from './contexts/AuthContext';
 import ProfilePage from './pages/ProfilePage';
+import PaymentPage from './pages/PaymentPage';
 import StakingModal from './components/StakingModal';
 import { distributeRCWinnings, calculateRCPot } from './services/stakingService';
 import { ECONOMY } from './constants/economy';
@@ -890,6 +891,7 @@ const AppContent = () => {
             />
           }
         />
+        <Route path="/payment" element={<PaymentPage />} />
         <Route
           path="*"
           element={
