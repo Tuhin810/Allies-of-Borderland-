@@ -1,0 +1,19 @@
+root = "./"
+structure = "summary"
+
+[book]
+title = "Allies of Borderland - Documentation"
+description = "Complete guide to playing Allies of Borderland, a competitive stake-based survival game"
+author = "Allies of Borderland Team"
+language = "en"
+
+[output.html]
+mathjax-support = false
+google-analytics = ""
+git-repository-url = "https://github.com/Tuhin810/Allies-of-Borderland-"
+git-repository-icon = "fa-github"
+edit-url-template = "https://github.com/Tuhin810/Allies-of-Borderland-/edit/main/docs/{path}"
+
+[output.html.fold]
+enable = true
+level = 1
