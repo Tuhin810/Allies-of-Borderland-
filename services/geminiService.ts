@@ -4,9 +4,9 @@ import { GameState, Player, Suit } from "../types";
 // Initialize Gemini Client
 // In a real app, strict error handling for missing API key should be here.
 // We assume process.env.API_KEY is available as per instructions.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: "AIzaSyCrt5W_7_b8rRRaRZ3FpcQG2k39S2FRdUU" });
 
-const MODEL_NAME = 'gemini-2.5-flash';
+const MODEL_NAME = 'gemini-2.0-flash-lite';
 
 export const generateRoundNarrative = async (
   round: number,
