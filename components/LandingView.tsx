@@ -282,10 +282,12 @@ const LandingView: React.FC<LandingViewProps> = ({
             In the Borderland, your wallet is your life. The Jack is an algorithm designed to separate you from your liquidity. <br />
             <strong className="text-white font-bold">Will you band together with the Citizens, or sell them out for the Grand Pot?</strong>
           </p>
-          <button className="group text-[#9945FF] uppercase font-bold tracking-[0.2em] text-sm hover:text-white transition-colors flex items-center justify-center gap-2 mx-auto">
-            Read the Whitepaper
-            <Icons.ChevronDown className="-rotate-90 group-hover:translate-x-1 transition-transform" size={14} />
-          </button>
+          <a href="https://pixel-protocol-2.gitbook.io/the-suite-trials/" target="_blank" rel="noopener noreferrer">
+            <button className="group text-[#9945FF] uppercase font-bold tracking-[0.2em] text-sm hover:text-white transition-colors flex items-center justify-center gap-2 mx-auto">
+              Read the Whitepaper
+              <Icons.ChevronDown className="-rotate-90 group-hover:translate-x-1 transition-transform" size={14} />
+            </button>
+          </a>
         </div>
       </section>
 
